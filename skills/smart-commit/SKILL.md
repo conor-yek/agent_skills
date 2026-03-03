@@ -8,6 +8,7 @@ description: >
   当用户说"帮我提交"、"生成 commit"、"写提交信息"、"commit 一下"、"提交代码"、
   "submodule 提交"、"同步提交 submodule"、"submodule commit"时触发。
   即使用户只是简单说"提交"或"commit"，也应使用此 skill。
+  提交完成后会询问是否推送到远端分支。
 license: MIT
 ---
 
@@ -126,8 +127,61 @@ submodule <path>:
 父仓库:
   Commit: <hash> — <提交标题>
   文件:  N 个文件变更
+```
 
-提醒：submodule 和父仓库均需推送到远端：
+### 第六步：询问是否推送到远端
+
+提交完成后，主动询问用户是否将提交推送到远端分支。
+
+**6a. 收集待推送信息**
+
+对每个已提交的仓库（submodule 和父仓库），检查远端跟踪状态：
+
+```bash
+# 检查当前分支及其远端跟踪分支
+git [-C <path>] branch -vv --list $(git [-C <path>] branch --show-current)
+# 检查是否有未推送的提交
+git [-C <path>] log @{upstream}..HEAD --oneline 2>/dev/null
+```
+
+**6b. 询问用户**
+
+用 `AskUserQuestion` 询问，选项：
+
+- **全部推送**（推荐）— 按顺序推送所有已提交的仓库（submodule 先于父仓库）
+- **仅推送父仓库** — 只推送父仓库（无 submodule 时不展示此选项）
+- **暂不推送** — 跳过推送，仅展示手动推送命令供参考
+
+**6c. 执行推送**
+
+用户选择推送后，按顺序执行：
+
+```bash
+# 1. 先推送 submodule（如有）
+git -C <submodule_path> push origin <branch>
+# 若远端无此分支，使用 -u 建立跟踪
+git -C <submodule_path> push -u origin <branch>
+
+# 2. 再推送父仓库
+git push origin <branch>
+```
+
+推送完成后输出结果：
+
+```
+── 推送完成 ──────────────────────────────────
+submodule <path>: → origin/<branch> ✓
+父仓库:          → origin/<branch> ✓
+```
+
+推送失败时报告错误（如远端冲突、权限不足），不自动 force push，等待用户处理。
+
+**6d. 用户选择暂不推送**
+
+输出手动推送命令供参考：
+
+```
+如需推送，可执行：
   git -C <submodule_path> push origin <branch>
   git push origin <branch>
 ```
@@ -179,7 +233,9 @@ submodule 更新:
 |----------|----------|
 | submodule 内有冲突 | 停止，报告冲突文件，等待用户解决 |
 | submodule detached HEAD | 询问用户选择分支后再提交 |
-| submodule 远端分支不存在 | 在汇总中提醒需要 `push -u` |
+| submodule 远端分支不存在 | 自动使用 `push -u` 建立跟踪 |
+| 推送被远端拒绝 | 报告错误（如需 pull/rebase），不 force push |
+| 推送权限不足 | 报告错误，提示检查远端权限 |
 | pre-commit hook 失败 | 报告错误内容，不重试，等待用户修复 |
 | 无任何变更可提交 | 告知用户 working tree clean |
 
@@ -190,4 +246,5 @@ submodule 更新:
 - 使用 `git commit -s` 添加 Signed-off-by 签名，不添加 Co-Authored-By
 - 精确暂存文件（逐个 `git add <file>`），避免 `git add .` 或 `git add -A`
 - 提交信息使用 HEREDOC 传递，确保格式正确
-- 不自动推送到远端，仅在汇总中提醒
+- 提交完成后主动询问是否推送，推送顺序为 submodule 先于父仓库
+- 绝不自动 force push，推送失败时报告错误等待用户处理
