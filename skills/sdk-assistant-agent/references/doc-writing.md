@@ -1,8 +1,3 @@
----
-name: doc-writing
-description: ARCS SDK 文档编写与修复助手。当用户需要为驱动、组件、示例或 Demo 编写/修改文档（README.md）、修复在线文档错误（客户反馈）、修复 Sphinx 构建警告、更新 toctree 索引，或了解文档发布流程时触发。
----
-
 # ARCS SDK 文档编写与修复助手
 
 ## Step 0: 意图识别（必须先做）

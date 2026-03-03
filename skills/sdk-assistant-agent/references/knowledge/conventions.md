@@ -16,16 +16,32 @@
 ```
 
 ## 日志
+
+SDK 中存在两套日志宏，均由 `<lisa_log.h>` 提供：
+
+**推荐用法（带 TAG 参数，样例和应用代码使用）：**
 ```c
 #define LOG_TAG "module_name"  // 必须在 include 之前
 #include <lisa_log.h>
-LOGI("message");              // Info
+LISA_LOGI(LOG_TAG, "message");    // Info
+LISA_LOGW(LOG_TAG, "message");    // Warning
+LISA_LOGE(LOG_TAG, "message");    // Error
+LISA_LOGD(LOG_TAG, "message");    // Debug
+```
+
+**简写用法（自动使用 LOG_TAG，驱动和组件内部代码可用）：**
+```c
+#define LOG_TAG "module_name"  // 必须在 include 之前
+#include <lisa_log.h>
+LOGI("message");              // 等价于 LISA_LOGI(LOG_TAG, "message")
 LOGW("message");              // Warning
 LOGE("message");              // Error
 LOGD("message");              // Debug
 LOGV("message");              // Verbose
 LOGH("tag", buf, len);        // Hex dump
 ```
+
+**选择规则：** 新写的 sample/demo 代码统一使用 `LISA_LOGI(LOG_TAG, ...)` 形式，更明确。
 
 ## 错误处理
 - 返回 0 表示成功，负数表示错误

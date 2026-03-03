@@ -23,13 +23,13 @@ allowed-tools: Read Glob Grep Bash WebFetch
 
 | 领域 | 触发信号 | 读取并执行 |
 |------|----------|------------|
-| **驱动开发** | 新驱动、设备注册、LISA_DEVICE、API vtable、外设、lisa_xxx 使用/移植 | `driver-dev/SKILL.md` |
-| **构建调试** | 编译/链接错误、CMake、Kconfig、menuconfig、烧录、串口日志、内存溢出 | `build-debug/SKILL.md` |
-| **样例生成** | 写示例、demo、sample、怎么用 xxx、使用方法 | `sample-gen/SKILL.md` |
-| **代码审查** | review、审查、检查代码、这段代码有问题吗、PR | `code-review/SKILL.md` |
-| **组件开发** | 新组件、新模块、evt_pub、work_queue、封装、抽象层 | `component-dev/SKILL.md` |
-| **文档编写** | 写文档、README、在线文档错误、toctree、文档发布、构建 warning | `doc-writing/SKILL.md` |
-| **自我进化** | 更新知识、优化 agent、回顾改进、进化 skill | `evolution/SKILL.md` |
+| **驱动开发** | 新驱动、设备注册、LISA_DEVICE、API vtable、外设、lisa_xxx 使用/移植 | `references/driver-dev.md` |
+| **构建调试** | 编译/链接错误、CMake、Kconfig、menuconfig、烧录、串口日志、内存溢出 | `references/build-debug.md` |
+| **样例生成** | 写示例、demo、sample、怎么用 xxx、使用方法 | `references/sample-gen.md` |
+| **代码审查** [基础] | review、审查、检查代码、这段代码有问题吗、PR | `references/code-review.md` |
+| **组件开发** [基础] | 新组件、新模块、evt_pub、work_queue、封装、抽象层 | `references/component-dev.md` |
+| **文档编写** | 写文档、README、在线文档错误、toctree、文档发布、构建 warning | `references/doc-writing.md` |
+| **自我进化** | 更新知识、优化 agent、回顾改进、进化 skill | `references/evolution.md` |
 
 **判断规则：**
 - 优先匹配精确关键词；不明确时结合用户打开的文件、分支名、git diff 判断
@@ -49,5 +49,5 @@ allowed-tools: Read Glob Grep Bash WebFetch
 ## 执行注意事项
 
 - 代码生成前先 `Glob/Grep` 检索 codebase 中的现有实现作为参考
-- 需要 API 细节时，参考 `knowledge/online-docs.md` 的 URL 映射，用 WebFetch 获取在线文档
+- 需要 API 细节时，参考 `references/knowledge/online-docs.md` 的 URL 映射，用 WebFetch 获取在线文档
 - 回答中引用具体文件路径和行号

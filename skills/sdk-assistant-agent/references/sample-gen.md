@@ -1,8 +1,3 @@
----
-name: sample-gen
-description: ARCS SDK 样例代码生成。基于现有 samples 模式生成新的示例项目，包含 CMakeLists.txt、prj.conf、Kconfig、sample.yaml、src/main.c 和 README.md。当用户需要写示例、demo、使用范例时触发。
----
-
 # ARCS 样例代码生成
 
 生成符合 ARCS SDK 规范的完整示例项目，覆盖驱动、模块、网络、蓝牙等各类场景。
@@ -51,7 +46,7 @@ samples/
 | 第三方模块 | `samples/modules/cjson/` |
 | 最简骨架 | `samples/helloworld/` |
 
-同时查阅 `knowledge/online-docs.md` 中的 URL 映射，用 WebFetch 获取目标驱动/组件的在线文档。
+同时查阅 `references/knowledge/online-docs.md` 中的 URL 映射，用 WebFetch 获取目标驱动/组件的在线文档。
 
 ---
 
