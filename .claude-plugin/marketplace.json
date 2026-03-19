@@ -1,11 +1,11 @@
 {
-  "name": "listenai-skills",
+  "name": "skills",
   "owner": {
     "name": "conor-yek",
     "url": "https://github.com/conor-yek"
   },
   "metadata": {
-    "description": "LISTENAI's AI coding assistant skills collection",
+    "description": "Personal AI coding assistant skills collection",
     "version": "1.0.0",
     "repository": "https://github.com/conor-yek/skills"
   },
@@ -30,7 +30,7 @@
     },
     {
       "name": "sdk-assistant-agent",
-      "description": "ARCS SDK / LISTENAI SDK 开发助手统一入口。自动路由驱动开发、构建调试、样例生成、组件开发、代码审查、文档编写等任务。",
+      "description": "ARCS SDK 开发助手统一入口。自动路由驱动开发、构建调试、样例生成、组件开发、代码审查、文档编写等任务。",
       "source": "./",
       "strict": false,
       "skills": [
