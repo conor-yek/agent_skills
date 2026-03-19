@@ -1,5 +1,5 @@
 {
-  "name": "skills",
+  "name": "agent_skills",
   "owner": {
     "name": "conor-yek",
     "url": "https://github.com/conor-yek"
@@ -7,7 +7,7 @@
   "metadata": {
     "description": "Personal AI coding assistant skills collection",
     "version": "1.0.0",
-    "repository": "https://github.com/conor-yek/skills"
+    "repository": "https://github.com/conor-yek/agent_skills"
   },
   "plugins": [
     {

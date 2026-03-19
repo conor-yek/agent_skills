@@ -6,7 +6,7 @@
 ## 安装
 
 ```bash
-npx skills add conor-yek/skills
+npx skills add conor-yek/agent_skills
 ```
 
 [`skills`](https://www.npmjs.com/package/skills) CLI 会自动检测已安装的 AI 代理并提供交互式选择。使用 `-g` 全局安装，或 `-y` 安装所有技能。
@@ -18,11 +18,9 @@ npx skills add conor-yek/skills
 Claude Code 用户也可通过 Marketplace 安装：
 
 ```bash
-# 添加 marketplace
-/plugin marketplace add conor-yek/skills
+/plugin marketplace add conor-yek/agent_skills
 
-# 安装单个技能
-/plugin install <skill-name>@conor-yek/skills
+/plugin install <skill-name>@conor-yek/agent_skills
 ```
 
 ### 手动安装
@@ -56,7 +54,7 @@ Claude Code 用户也可通过 Marketplace 安装：
 遵循 [agentskills](https://github.com/agentskills/agentskills) 标准格式。
 
 ```
-skills/
+agent_skills/
 ├── skills/                 # 技能目录（agentskills 格式）
 │   └── <skill-name>/
 │       ├── SKILL.md        # 入口文件（含 frontmatter）
