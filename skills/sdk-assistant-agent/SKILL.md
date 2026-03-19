@@ -27,7 +27,7 @@ allowed-tools: Read Glob Grep Bash WebFetch
 |------|----------|------------|
 | **驱动开发** | 新驱动、设备注册、LISA_DEVICE、API vtable、外设、lisa_xxx 使用/移植 | `references/driver-dev.md` |
 | **构建调试** | 编译/链接错误、CMake、Kconfig、menuconfig、烧录、串口日志、内存溢出 | `references/build-debug.md` |
-| **样例生成** | 写示例、demo、sample、怎么用 xxx、使用方法 | `references/sample-gen.md` |
+| **样例生成** | 写示例、demo、sample、example、怎么用 xxx、使用方法、需要产出可复用示例或完整代码 | `references/sample-gen.md` |
 | **代码审查** | review、审查、检查代码、这段代码有问题吗、PR | `references/code-review.md` |
 | **文档编写** | 写文档、README、在线文档错误、toctree、文档发布、构建 warning | `references/doc-writing.md` |
 | **知识维护** | 更新知识、优化 agent、检查知识库、SDK 更新同步、从提交提取经验 | `references/evolution.md` |
@@ -103,9 +103,11 @@ allowed-tools: Read Glob Grep Bash WebFetch
 
 ### 判断规则
 
-- 优先匹配精确关键词；不明确时结合用户打开的文件、分支名、git diff 判断
-- 多领域交叉（如"写个驱动的 sample"）→ 确定主意图后按依赖顺序调用，例：driver-dev → sample-gen
-- 无法判断 → 向用户确认
+- 优先匹配精确关键词；不明确时再看当前文件、分支名或 `git diff`
+- 区分“解释/确认”与“产物/交付物”：前者可考虑直接回答，后者优先路由 worker
+- 凡需生产可复用内容（示例、demo、sample、完整代码、文件/结构/初始化链路），直接回答不可用
+- 多领域交叉时按依赖顺序串联 worker（如 driver-dev → sample-gen）
+- 实在判断不了，就向用户确认
 
 ### 多模块协同
 
@@ -126,13 +128,21 @@ allowed-tools: Read Glob Grep Bash WebFetch
 
 ## 直接回答（跳过 worker）
 
-满足以下**全部**条件时直接回答，不读取 worker 文件：
+只在**全部**条件成立时才直接回答，跳过 worker：
 
-- 问题只需一段代码片段或一句说明即可完整回答
-- 不涉及生成新文件
-- 对相关 API 有足够确定性
+- 请求属于“解释/确认/简短用法”，而非“示例/demo/sample/实现/文件产物”
+- 不需文件/结构规划、完整函数集、初始化链路、CMake/Kconfig 配套，或工程级组织与 sample 对照
+- 一段简短代码或说明就能完整覆盖用户需求
+- 不涉及新文件生成
+- 对相关 API 的用法有充分把握
 
-不确定 API 用法时，先 `Read` 对应头文件，再作答。
+以下情况必须转 worker，不能直接回答：
+
+- 需要可复用示例、demo、sample、完整代码或文件级产出
+- 要求 SDK 风格对齐、sample 参考、工程结构、初始化链路或配套构建配置
+- 表面上看似示例代码，实则在请求完整交付物
+
+不确定 API 用法时，先 `Read` 对应头文件再回复。
 
 ## 执行注意事项
 
