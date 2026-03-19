@@ -1,3 +1,6 @@
+<!-- type: worker -->
+<!-- 开发规则: README.md#开发规则 -->
+
 # ARCS 编译烧录调试助手
 
 覆盖 ARCS SDK 开发的三大核心操作：**编译构建**、**固件烧录**、**串口日志查看**，以及对应的故障诊断。
@@ -44,7 +47,6 @@
 **在线文档参考:**
 - 快速入门（编译/烧录命令）: `get_started.html`
 - GDB 调试指南: `gdb.html`
-- 完整 URL 映射见 `references/knowledge/online-docs.md`
 
 ---
 
@@ -104,22 +106,24 @@
    ls -l build/*.bin
    - 不存在 → 提示先编译
 
-2. 检测可用串口:
-   ls -l /dev/ttyUSB* 2>/dev/null || ls -l /dev/ttyACM* 2>/dev/null
+2. 检测可用串口（兼容 zsh，避免通配符无匹配时报错）:
+   ls /dev/ttyUSB* 2>/dev/null; ls /dev/ttyACM* 2>/dev/null
+   - 两条命令用 `;` 分开，确保一个无匹配不影响另一个
    - 无串口 → 提示检查 USB 连接
 
 3. 检查串口是否被占用:
    fuser /dev/ttyACM0 (或 ttyUSB0)
    - 有进程占用（如 picocom/minicom）→ kill <PID> 释放端口后再烧录
 
-4. 提示用户操作:
-   ⚠️ 烧录前请执行: 按住 BOOT 按键，然后复位开发板
+4. 判断是否需要手动进入 BOOT 模式:
+   - arcs_evb（ttyACM 设备）→ cskburn 通过串口流控（DTR/RTS）自动控制 BOOT/RST 引脚，无需手动操作，直接烧录
+   - arcs_mini 或 ttyUSB 设备 → ⚠️ 提示用户: 按住 BOOT 按键，然后复位开发板
 ```
 
 **信息收集**:
 
 1. **bin 文件路径** — 默认 `build/<app_name>.bin`，从最近构建中推断
-2. **串口设备** — 从检测结果中选择，通常是 `/dev/ttyUSB0`
+2. **串口设备** — 从检测结果中选择；arcs_evb 通常是 `/dev/ttyACM0`，arcs_mini 通常是 `/dev/ttyUSB0`
 3. **烧录目标** — Flash（默认）还是 eMMC（需 `--emmc`）
 4. **波特率** — 默认 3000000，不稳定时建议降低
 
@@ -127,13 +131,13 @@
 
 ```
 1. 执行前置检查
-2. 提示用户进入 BOOT 模式
-3. 等待用户确认
-4. 构造烧录命令:
+2. 若非 EVB 板（见上述判断）→ 提示用户手动进入 BOOT 模式，等待确认
+3. 构造烧录命令:
    ./tools/burn/cskburn -C arcs -s <串口> -b <波特率> 0x0 <bin文件>
-5. 用 Bash 工具执行命令
-6. 分析输出:
-   ├─ 成功 → 提示: "烧录完成，请复位开发板运行固件"
+4. 用 Bash 工具执行命令
+5. 分析输出:
+   ├─ 成功 → cskburn 结束时自带 Reset，设备会自动重启运行新固件
+   │         若用户需要日志，可直接跳转 2C 抓取（无需再次复位）
    └─ 失败 → 跳转 Step 3B 诊断
 ```
 
@@ -151,22 +155,36 @@
 
 #### 2C: 串口日志查看
 
-**检测可用工具**（Agent 主动执行）:
-
+**检测串口设备**（每次操作前执行，兼容 zsh）:
 ```bash
-# 按优先级检测已安装的串口工具
-which picocom 2>/dev/null && echo "picocom available"
-which minicom 2>/dev/null && echo "minicom available"
-which screen 2>/dev/null && echo "screen available"
-python3 -c "import serial.tools.miniterm" 2>/dev/null && echo "miniterm available"
+ls /dev/ttyUSB* 2>/dev/null; ls /dev/ttyACM* 2>/dev/null
 ```
 
-**检测串口设备**:
-```bash
-ls -l /dev/ttyUSB* 2>/dev/null || ls -l /dev/ttyACM* 2>/dev/null
+---
+
+**场景 A：Agent 自动抓取（默认）**
+
+实现编译→烧录→抓日志的完整闭环，无需用户手动按 Reset 或开终端。仅依赖本 skill 自带的 `serial_read.py` + SDK 仓库的 `cskburn`，零外部依赖。
+
+**核心约束**：串口同一时间只能被一个进程占用。执行 cskburn 或串口读取前，必须先 `fuser <设备>` 检查，有占用则 `kill` 释放。
+
+**执行步骤**：
+
+```
+1. 释放串口: fuser <设备> 2>/dev/null → 有占用则 kill <PID>
+2. 若需从冷启动抓日志: ./tools/burn/cskburn -C arcs -s <设备> --chip-id → sleep 1～2
+   （arcs_evb 支持 DTR/RTS 流控自动复位；arcs_mini 需用户手动按复位键）
+   若刚烧录完成（cskburn 结束自带 Reset），可跳过此步直接抓取
+3. 抓取: python3 <skill_dir>/references/scripts/serial_read.py <设备> -b 921600 -t <秒数> > /tmp/arcs_serial.log 2>&1
+   （<skill_dir> 为本 skill 目录，如 .claude/skills/sdk-assistant-agent；限时读取、非 TTY 可用、仅 Python 标准库）
+4. 读取: 读取 /tmp/arcs_serial.log，分析并反馈给用户
 ```
 
-**推荐命令**（按优先级）:
+---
+
+**场景 B：用户手动交互式查看**
+
+当用户想自己持续监控串口输出时，推荐以下工具（在用户终端运行）：
 
 | 工具 | 命令 | 退出方式 |
 |------|------|----------|
@@ -175,26 +193,10 @@ ls -l /dev/ttyUSB* 2>/dev/null || ls -l /dev/ttyACM* 2>/dev/null
 | screen | `screen /dev/ttyUSB0 921600` | `Ctrl-A K` 然后按 `Y` |
 | miniterm | `python3 -m serial.tools.miniterm /dev/ttyUSB0 921600` | `Ctrl-]` |
 
-**关键参数说明**:
-- **波特率 921600** — ARCS syslog UART 默认波特率
-- **8N1** — 8 数据位、无校验、1 停止位（所有工具默认值）
-- 串口设备通常是 `/dev/ttyUSB0`，多设备时需确认
-
-**执行流程**:
-
-```
-1. 检测可用串口工具和设备
-2. 根据检测结果推荐命令
-3. 给出完整命令和退出方式
-4. 提示: 串口监视工具会独占终端，Agent 无法替你执行
-   - 建议用户在另一个终端窗口中运行
-   - 或使用 Bash 工具的 run_in_background 模式（有超时限制）
-```
-
-**常用操作提示**:
+- 波特率 **921600**，8N1；串口设备通常是 `/dev/ttyUSB0`，多设备时需确认
+- 串口监视工具会独占终端，建议用户在另一个终端运行
 - 日志保存: `picocom -b 921600 /dev/ttyUSB0 --logfile output.log`
-- 带时间戳: `picocom -b 921600 /dev/ttyUSB0 | ts '[%Y-%m-%d %H:%M:%S]'`（需安装 moreutils）
-- 串口权限不足时: `sudo usermod -a -G dialout $USER`（需重新登录生效）
+- 权限不足时: `sudo usermod -a -G dialout $USER`（需重新登录）
 
 ---
 
@@ -202,7 +204,7 @@ ls -l /dev/ttyUSB* 2>/dev/null || ls -l /dev/ttyACM* 2>/dev/null
 
 **通用诊断流程**:
 1. 让用户提供**完整的错误输出**（或从 Step 2 的执行结果中直接获取）
-2. 读取 `references/knowledge/build-issues.md` 查找已知问题模式
+2. 读取 `references/experience/` 下相关模块的经验文件查找已知问题
 3. 确认用户的**板型**和**项目路径**
 4. 如需要，检查用户的 `prj.conf` 和 `CMakeLists.txt`
 5. 匹配已知模式 → 给出解决方案；未知模式 → 引导式排查
@@ -258,7 +260,7 @@ ls -l /dev/ttyUSB* 2>/dev/null || ls -l /dev/ttyACM* 2>/dev/null
 | `section .xxx not found` | 自定义段 .ld.in 未注册 | 在 CMakeLists.txt 中添加 `listenai_add_custom_section()` |
 | `will not fit in region` / `overflow` | ROM/RAM 空间不足 | 检查 .map 文件，优化大数组/启用 XIP/调整栈大小 |
 
-**内存溢出分析指引** — 读取 `references/knowledge/build-issues.md` 第 3 节和第 7 节获取完整指引
+**内存溢出分析指引** — 分析 .map 文件定位大符号
 
 快速步骤:
 ```
@@ -318,6 +320,8 @@ ls -l /dev/ttyUSB* 2>/dev/null || ls -l /dev/ttyACM* 2>/dev/null
 
 ```
 无日志输出
+├─ 烧录后/刚连接无输出（优先尝试，无需用户按 Reset）
+│   └─ 按 2C「Agent 自动抓取日志」闭环：释放串口 → cskburn --chip-id 复位 → sleep 1～2 → 再抓取
 ├─ 检查物理连接
 │   ├─ 波特率是否 921600？
 │   ├─ TX/RX 是否反接？
@@ -360,18 +364,15 @@ ls -l /dev/ttyUSB* 2>/dev/null || ls -l /dev/ttyACM* 2>/dev/null
 
 ---
 
-### Step 4: 知识沉淀
+### Step 4: 经验沉淀
 
-如果在诊断过程中遇到新类型的问题：
-1. 记录到 `references/knowledge/build-issues.md` 对应分类下
-2. 包含: 错误模式、根因、解决方案
-3. 若为常见问题，同步更新本 SKILL.md 的诊断表格
+如果在诊断过程中遇到新类型的问题，评估是否值得记录 → 如有，调用 `experience-capture` skill 走确认流程。
 
 ---
 
 ## 在线文档参考
 
-需要完整参数说明或详细配置时，WebFetch 对应页面（URL 前缀见 `references/knowledge/online-docs.md`）：
+需要完整参数说明或详细配置时，WebFetch 对应在线文档页面：
 
 | 内容 | 文档路径 |
 |------|----------|
