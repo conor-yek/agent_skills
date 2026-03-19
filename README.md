@@ -41,7 +41,6 @@ Claude Code 用户也可通过 Marketplace 安装：
 
 | 技能 | 说明 |
 | ---- | ---- |
-| `arcs-dev-tools` | ARCS SDK 工具链操作：拉取仓库、环境安装、编译、烧录、运行与串口日志读取 |
 | `smart-commit` | 智能 Git 提交助手，自动生成中文 Conventional Commits 提交信息，具备 submodule 感知与提交前安全检查，使用 `git commit -s` 签名提交 |
 | `sdk-assistant-agent` | ARCS SDK 开发助手统一入口，自动路由驱动开发、构建调试、样例生成、组件开发、代码审查、文档编写等任务 |
 

@@ -11,15 +11,6 @@
   },
   "plugins": [
     {
-      "name": "arcs-dev-tools",
-      "description": "ARCS SDK toolchain ops: clone repo, setup environment, build, flash, run, and read serial logs.",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./skills/arcs-dev-tools"
-      ]
-    },
-    {
       "name": "smart-commit",
       "description": "Smart Git commit assistant with submodule awareness. Generates Chinese Conventional Commits messages, runs safety checks, and creates signed commits.",
       "source": "./",
